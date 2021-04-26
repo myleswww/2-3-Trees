@@ -21,27 +21,50 @@ class Node{
 
 
     public:
-    Node();
-    Node(int val);
     int numChildren();
     void absorb(Node * newChild);
-    void discard(Node * removeChild)
+    void discard(Node * removeChild);
     int getMaxVal();
+    Node * getChild(int childToGet);
+    int getValue(int valToGet);
     int setParent(Node node);
     void addVal(int val);
     void removeVal(int val);
-
-    Node(){
+};
+    Node::Node(){
         //literally do nothing
     }
-    Node(int val){
-        this.value[0] = val; //wtf is the point of having this length 6? I guess I will have to find out. Or google idk.
+    Node::Node(int val){
+        this->value[0] = val; //wtf is the point of having this length 6? I guess I will have to find out. Or google idk.
     }
 
-    int numChildren(){
+    Node * Node::getChild(int childToGet){
+        
+        Node * child = this->child[childToGet];
+        if(child != NULL){
+            return child;
+        }
+        else{
+            cout << "Holy shit batman its broke! .__." << endl;
+            return new Node();
+        }
+    }
+
+    int Node::getValue(int valToGet){
+        int * val = this->value[valToGet];
+        if(val != NULL){
+            return val;
+        }
+        else{
+            cout << "Holy shit batman its broke! .__." << endl;
+            return new Node();
+        }
+    }
+
+    int Node::numChildren(){
         int count =0;
         for(int i=0; i<6; i++){
-            if(child[i] != NULL){
+            if(this->child[i] != NULL){
                 count++;
             }
         }
@@ -49,11 +72,11 @@ class Node{
     }
 
 
-    int getMaxVal(){ 
-        int max = this.value[0];
-        for(int i = 1; i < sizeof(this.value); i++){
-            if(this.value[i-1] < this.value[i]){
-                max = this.value[i];
+    int Node::getMaxVal(){ 
+        int max = this->value[0];
+        for(int i = 1; i < sizeof(this->value); i++){
+            if(this->value[i-1] < this->value[i]){
+                max = this->value[i];
             }
             else{
                 //do nothing
@@ -63,10 +86,10 @@ class Node{
         return max;
     }
 
-    void addVal(int val){
+    void Node::addVal(int val){
         for(int i = 0; i < 6; i++){
-            if(this.value[i] == NULL){ //go until you hit a null.
-                this.value[i] = val;  
+            if(this->value[i] == NULL){ //go until you hit a null.
+                this->value[i] = val;  
                 return;
             }
             else{
@@ -76,11 +99,11 @@ class Node{
     }
 
 
-    void absorb(Node * newChild){
+    void Node::absorb(Node * newChild){
          
          for(int i = 0; i < 6; i++){
-            if(this.child[i] == NULL){ //go until you hit a null.
-                this.child[i] = newChild;  
+            if(this->child[i] == NULL){ //go until you hit a null.
+                this->child[i] = newChild;  
                 return;
             }
             else{
@@ -89,11 +112,11 @@ class Node{
         }
     }
 
-    void discard(Node * removeChild){
+    void Node::discard(Node * removeChild){
         Node blankNode = new Node();
         for(int i = 0; i < 6; i++){
-            if(this.child[i].getMaxVal() == removeChild.getMaxVal()){ //go until they have same max values
-                this.child[i] = blankNode; //blank it out.
+            if(this->child[i].getMaxVal() == removeChild.getMaxVal()){ //go until they have same max values
+                this->child[i] = blankNode; //blank it out.
             }
             else{
                 //do nothing
@@ -102,10 +125,11 @@ class Node{
         removeVal(removeChild.getMaxVal()); //remove the max value of the child that is stored in this node
     }
 
-    void removeVal(int val){
+    void Node::removeVal(int val){
         for(int i = 0; i < 6; i++){
-            if(this.value[i] == val){ //go until you hit a null.
-                this.value[i] = 0;  
+            int temp = this.
+            if(this->value[i] == val){ //go until you hit a null.
+                this->value[i] = 0;  
                 return;
             }
             else{
@@ -113,7 +137,7 @@ class Node{
             }
         }
     }
-}
+
 
 
 
@@ -135,9 +159,9 @@ class Tree{
     void print();
 
     void buildTree(Node * leaves, int size);
+};
 
-
-    Tree(int * arr, int size){
+    Tree::Tree(int * arr, int size){
         //First, make each value into a node. These are the leaves. They have no children. :)
         Node * init = new Node[size];
         for(int i = 0; i < size; i++){ //create node, assign the value to it. bam. SO SORRY FOR DOING SOMETHING THAT IS O(n)!
@@ -149,11 +173,11 @@ class Tree{
           a node and if youre left with one value at the end, move one of the other numbers over so the last two nodes have 2 values its not that hard jesus and its the exact same height like get a grip Uzi
         */
 
-        self.buildTree(init, size);
+        this->buildTree(init, size);
     }
 
 
-    int height(Node * node){
+    int Tree::height(Node * node){
         if(node == NULL){
             return 0;
         }
@@ -161,8 +185,8 @@ class Tree{
             int max = 0;
             int l[3] = {0, 0, 0};
             
-            for(int i = 0; i < node.numChildren(); i++){ //will only go through # of children
-                l[i] = height(node.child[i]);
+            for(int i = 0; i < node->numChildren(); i++){ //will only go through # of children
+                l[i] = height(node->getChild(i));
             }
             for(int j=1; j < 3; j++){ //comparison to get max
                 if(l[j]>l[j-1]){
@@ -174,38 +198,38 @@ class Tree{
     }
 
 
-    void buildTree(Node * leaves, int size){
+    void Tree::buildTree(Node * leaves, int size){
         int sizeround = ceil(size/3);
         int itemstravelled = 0;
         int itemsleft = size;
-        Node * p1 = Node[sizeround];
+        Node * p1 = Node()[sizeround];
         for(int j = 0; j < sizeround; j++){ //OKAY so basically this is going to have itemsleft and if it is >=3 all items get added to parent node, if it is =2, only those ones are added, if it is =1, then the last item in the node before gets removed and added to make it 2 ya feel?
-            p1[j] = new Node();
+            //p1[j] = new Node()*;
             if(itemsleft >= 3){
                 for(int h = 0; h < 3; h++){
-                    p1[j].addVal(leaves[itemstravelled].getMaxVal())
+                    p1[j].addVal(leaves[itemstravelled].getMaxVal());
                     leaves[itemstravelled].setParent(p1[j]); //setting connections for two way traversal
-                    p1[j].absorb(leaves[itemstravelled]);
+                    p1[j].absorb(&leaves[itemstravelled]);
                     itemstravelled++;
                 }
                 itemsleft -= 3;
             }
             if(itemsleft == 2){
                 for(int h = 0; h < 2; h++){
-                    p1[j].addVal(leaves[itemstravelled].getMaxVal())
+                    p1[j].addVal(leaves[itemstravelled].getMaxVal());
                     leaves[itemstravelled].setParent(p1[j]); //setting connections for two way traversal
-                    p1[j].absorb(leaves[itemstravelled]);
+                    p1[j].absorb(&leaves[itemstravelled]);
                     itemstravelled++;
                 }
                 itemsleft -= 2;
             }
             if(itemsleft == 1){ //this is the shitty one. have to go to previous p node and remove an element, then insert it into pi then insert the last element.
-                p1[j-1].discard(leaves[itemstravelled-1]); //removing previous value.
+                p1[j-1].discard(&leaves[itemstravelled-1]); //removing previous value.
                 p1[j].addVal(leaves[itemstravelled-1].getMaxVal()); //inserting it into pi.
                 p1[j].addVal(leaves[itemstravelled].getMaxVal()); //inserting current element into pi
                 leaves[itemstravelled].setParent(p1[j-1]);
                 leaves[itemstravelled].setParent(p1[j]); //setting connections for two way traversal
-                p1[j].absorb(leaves[itemstravelled]);
+                p1[j].absorb(&leaves[itemstravelled]);
 
             }
         }
@@ -216,40 +240,47 @@ class Tree{
         }
         else{
             //you are done. set the root node and be done with it.
-            this.root = p1[0];
+            this->root = &p1[0];
         }
     }
 
 
-    Node * search(int valToFind){
+    Node * Tree::search(int valToFind){
         //let root be root of T
         //Base case for leaf
-        if(){//root has no children
-            return root;
+        if(this->root->numChildren() == 0){//root has no children
+            return this->root;
         } 
-        else if(valToFind <= root.left){
-            root.leftchild.Search(valToFind);
+        if(valToFind <= this->root->getChild(0).getMaxVal()){
+            //root.leftchild.Search(valToFind);
         }
-        else if(valToFind <= root.mid){
-            root.midchild.Search(valToFind);
+        if(valToFind <= this->root->getChild(1).getMaxVal()){
+            //root.midchild.Search(valToFind);
         }
-        else if(valToFind <= root.right){
-            root.rightchild.Search(valToFind);
+        if(valToFind <= this->root->getChild(2).getMaxVal()){
+            //root.rightchild.Search(valToFind);
         }
-        else
+        else{
             //return largest element of arrray
+        }
+        return root; //dont really do this.
     }
 
-    bool insert(int valToAdd){
-        let b = T.search(valToAdd);
-        if(b==valToFind){
-            return 0;
+    bool Tree::insert(int valToAdd){
+        Node * b = this->search(valToAdd);
+        for(int i=0; i<6; i++){
+            if(NULL != b->getValue(i)){
+                if(b->getValue(i)==valToAdd){
+                    return 0;
+                }   
+            }
         }
-        T.absorb(valToAdd, b); //is function of node.
+        
+        b->absorb(b, valToAdd); //is function of node.
         return 1;
     }
 
-    bool delete(int valToKill){
+    bool Tree::delete(int valToKill){
         Node * b = T.search(valToKill);
         if(b == valToKill){
             T.discard(valToKill); //function of node
@@ -258,47 +289,46 @@ class Tree{
         return 0;
     }
 
-    void print(Node * start, int level){ //using breadth first traversal
+    void Tree::print(Node * start, int level){ //using breadth first traversal
         if(root == NULL){
             return;
         }
         if(level == 1){
             for(int i=0; i<6; i++){
-                if(start.value[i] != NULL){
-                    cout << start.value[i];
+                if((start->getValue(i)) != NULL){
+                    cout << start->getValue(i);
                 }
             }
             cout << endl;
         }
         else{
-            for(int j=0; j<start.numChildren(); j++){
-                print(start.child[j], (level-1));
+            for(int j=0; j<start->numChildren(); j++){
+                print(start->getChild(j), (level-1));
             }
             
         }
         
     }
 
-    void print(){
-        int h = height(this.root);
+    void Tree::print(){
+        int h = height(this->root);
         for(int i=0; i<h; i++){
-            print(this.root, i);
+            print(this->root, i);
         }
         
     }
-}
+
 
 
 
 int main(int argc, char * argv[]){
     //first we need to build this little shit.
     int size = 15;
-    int * seq = new int[size];
-    seq = {1, 3, 5, 8, 11, 14, 17, 19, 21, 24, 28, 31, 33, 36, 39};
+    int seq[size] = {1, 3, 5, 8, 11, 14, 17, 19, 21, 24, 28, 31, 33, 36, 39};
 
     //and now we pass it to the helper function I made because why do this all in main???? thats dumb.
-    Tree tr = new Tree(seq, size);
+    Tree * tr = new Tree(seq, size);
 
-
+    tr->print();
 
 }
