@@ -10,6 +10,8 @@ Guides Used: https://www.cprogramming.com/tutorial/computersciencetheory/twothre
              https://www.geeksforgeeks.org/level-order-tree-traversal/
 */
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 using namespace std;
 
@@ -21,6 +23,8 @@ class Node{
 
 
     public:
+    Node();
+    Node(int val);
     int numChildren();
     void absorb(Node * newChild);
     void discard(Node * removeChild);
@@ -33,15 +37,22 @@ class Node{
 };
     Node::Node(){
         //literally do nothing
+        for(int i=0; i<6; i++){
+            this->value[i] = 0;
+        }
     }
     Node::Node(int val){
         this->value[0] = val; //wtf is the point of having this length 6? I guess I will have to find out. Or google idk.
+        this->child[0] = 0;
+        for(int i=1; i<6; i++){
+            this->value[i] = 0;
+        }
     }
 
     Node * Node::getChild(int childToGet){
         
         Node * child = this->child[childToGet];
-        if(child != NULL){
+        if(child != 0){
             return child;
         }
         else{
@@ -51,20 +62,21 @@ class Node{
     }
 
     int Node::getValue(int valToGet){
-        int * val = this->value[valToGet];
-        if(val != NULL){
+        int val = this->value[valToGet];
+        if(val != 0){
             return val;
         }
         else{
             cout << "Holy shit batman its broke! .__." << endl;
-            return new Node();
+            val = -1;
+            return val;
         }
     }
 
     int Node::numChildren(){
         int count =0;
         for(int i=0; i<6; i++){
-            if(this->child[i] != NULL){
+            if(this->child[i]->getMaxVal() != 0){
                 count++;
             }
         }
@@ -74,7 +86,7 @@ class Node{
 
     int Node::getMaxVal(){ 
         int max = this->value[0];
-        for(int i = 1; i < sizeof(this->value); i++){
+        for(int i = 1; i < int(sizeof(this->value)); i++){
             if(this->value[i-1] < this->value[i]){
                 max = this->value[i];
             }
@@ -87,8 +99,8 @@ class Node{
     }
 
     void Node::addVal(int val){
-        for(int i = 0; i < 6; i++){
-            if(this->value[i] == NULL){ //go until you hit a null.
+        for(int i = 0; i < 3; i++){
+            if(this->value[i] == 0){ //go until you hit a 0.
                 this->value[i] = val;  
                 return;
             }
@@ -101,8 +113,8 @@ class Node{
 
     void Node::absorb(Node * newChild){
          
-         for(int i = 0; i < 6; i++){
-            if(this->child[i] == NULL){ //go until you hit a null.
+         for(int i = 0; i < 3; i++){
+            if(this->child[i]->getValue(i) == 0){ //go until you hit a 0.
                 this->child[i] = newChild;  
                 return;
             }
@@ -113,22 +125,21 @@ class Node{
     }
 
     void Node::discard(Node * removeChild){
-        Node blankNode = new Node();
-        for(int i = 0; i < 6; i++){
-            if(this->child[i].getMaxVal() == removeChild.getMaxVal()){ //go until they have same max values
+        Node * blankNode = new Node();
+        for(int i = 0; i < 3; i++){
+            if(this->child[i]->getMaxVal() == removeChild->getMaxVal()){ //go until they have same max values
                 this->child[i] = blankNode; //blank it out.
             }
             else{
                 //do nothing
             }
         }
-        removeVal(removeChild.getMaxVal()); //remove the max value of the child that is stored in this node
+        removeVal(removeChild->getMaxVal()); //remove the max value of the child that is stored in this node
     }
 
     void Node::removeVal(int val){
         for(int i = 0; i < 6; i++){
-            int temp = this.
-            if(this->value[i] == val){ //go until you hit a null.
+            if(this->value[i] == val){ //go until you hit a 0.
                 this->value[i] = 0;  
                 return;
             }
@@ -155,7 +166,7 @@ class Tree{
     Tree(int * arr, int size);
     Node * search(int valToFind);
     bool insert(int valToAdd);
-    bool delete(int valToKill);
+    bool del(int valToKill); //delete is a keyword in C++ so maybe rename this in the prompt so people dont get confused when they get "Expected Unqualified-Id before 'delete' function" error message when trying to compile
     void print();
 
     void buildTree(Node * leaves, int size);
@@ -165,7 +176,8 @@ class Tree{
         //First, make each value into a node. These are the leaves. They have no children. :)
         Node * init = new Node[size];
         for(int i = 0; i < size; i++){ //create node, assign the value to it. bam. SO SORRY FOR DOING SOMETHING THAT IS O(n)!
-            init[i] = Node(arr[i]);
+            Node * oof = new Node(arr[i]);
+            init[i] = *oof;
         } 
 
         /*Then, assign each one a parent node, and shove the values into the parent node (will be either 2 or 3 values, I am following Uzi's diagram for this.) 
@@ -178,7 +190,7 @@ class Tree{
 
 
     int Tree::height(Node * node){
-        if(node == NULL){
+        if(node->getMaxVal() == 0){
             return 0;
         }
         else{
@@ -202,7 +214,7 @@ class Tree{
         int sizeround = ceil(size/3);
         int itemstravelled = 0;
         int itemsleft = size;
-        Node * p1 = Node()[sizeround];
+        Node * p1 = new Node[sizeround];
         for(int j = 0; j < sizeround; j++){ //OKAY so basically this is going to have itemsleft and if it is >=3 all items get added to parent node, if it is =2, only those ones are added, if it is =1, then the last item in the node before gets removed and added to make it 2 ya feel?
             //p1[j] = new Node()*;
             if(itemsleft >= 3){
@@ -251,13 +263,13 @@ class Tree{
         if(this->root->numChildren() == 0){//root has no children
             return this->root;
         } 
-        if(valToFind <= this->root->getChild(0).getMaxVal()){
+        if(valToFind <= this->root->getChild(0)->getMaxVal()){
             //root.leftchild.Search(valToFind);
         }
-        if(valToFind <= this->root->getChild(1).getMaxVal()){
+        if(valToFind <= this->root->getChild(1)->getMaxVal()){
             //root.midchild.Search(valToFind);
         }
-        if(valToFind <= this->root->getChild(2).getMaxVal()){
+        if(valToFind <= this->root->getChild(2)->getMaxVal()){
             //root.rightchild.Search(valToFind);
         }
         else{
@@ -269,40 +281,43 @@ class Tree{
     bool Tree::insert(int valToAdd){
         Node * b = this->search(valToAdd);
         for(int i=0; i<6; i++){
-            if(NULL != b->getValue(i)){
+            if(0 != b->getValue(i)){
                 if(b->getValue(i)==valToAdd){
                     return 0;
                 }   
             }
         }
         
-        b->absorb(b, valToAdd); //is function of node.
+        b->absorb(b); //is function of node.
         return 1;
     }
 
-    bool Tree::delete(int valToKill){
-        Node * b = T.search(valToKill);
-        if(b == valToKill){
-            T.discard(valToKill); //function of node
+    bool Tree::del(int valToKill){
+        Node * b = this->search(valToKill);
+        for(int i=0; i<6; i++){
+            if(b->getValue(i) == valToKill){
+                b->removeVal(valToKill); //function of node
             return 1;
+            }
         }
+        
         return 0;
     }
 
     void Tree::print(Node * start, int level){ //using breadth first traversal
-        if(root == NULL){
+        if(root->getMaxVal() == 0){
             return;
         }
         if(level == 1){
             for(int i=0; i<6; i++){
-                if((start->getValue(i)) != NULL){
+                if((start->getValue(i)) != 0){
                     cout << start->getValue(i);
                 }
             }
             cout << endl;
         }
         else{
-            for(int j=0; j<start->numChildren(); j++){
+            for(int j=0; j< start->numChildren(); j++){
                 print(start->getChild(j), (level-1));
             }
             
