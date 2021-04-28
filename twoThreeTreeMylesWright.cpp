@@ -1,13 +1,14 @@
 /*  Author: Myles Wright
     Project: 2-3 tree
     CS452 Spring 2021
+    Sorry that my code is actual horse shit thx
 */
 
 /*
 Guides Used: https://www.cprogramming.com/tutorial/computersciencetheory/twothree.html
              https://www.geeksforgeeks.org/2-3-trees-search-and-insert/                     Basically these are BS for this project in particular lol
              http://pages.cs.wisc.edu/~paton/readings/Old/fall01/2-3Tree.html
-             https://www.geeksforgeeks.org/level-order-tree-traversal/
+             https://www.geeksforgeeks.org/level-order-tree-traversal/                      All of these trees do not take the max val to the parent node
 */
 #include <iostream>
 #include <stdio.h>
@@ -20,61 +21,82 @@ class Node{
     Node * parent;
     int value[6];
     Node * child[6];
-
+    void clear();
 
     public:
     Node();
     Node(int val, int val2);
-    Node(int val, int val2, int val3);
-    int numChildren();
+    Node(int val, int val2, int val3); //constructors
+
+
     void absorb(Node * newChild);
-    void discard(Node * removeChild);
+    void discard(Node * removeChild); //core functions
+
+    int numChildren(); //helper functions
+    int numValue();
     int getMaxVal();
     Node * getChild(int childToGet);
+    Node * getParent();
     int getValue(int valToGet);
     void setParent(Node * node);
     void setChild(Node * node);
     void addVal(int val);
     void removeVal(int val);
+    void printNode();
+    Node * search(int x);
 };
     Node::Node(){
-        //literally do nothing
-        for(int i=0; i<6; i++){
-            this->value[i] = 0;
-        }
-        for(int i=0; i<6; i++){
-            cout << "Node value " << i << ": " << this->value[i] << endl;
-        }
+        this->clear();
     }
     Node::Node(int val, int val2){
+        this->clear(); //initialize values
         int vals[2] = {val, val2}; //put them in an array
-
         for(int i = 0; i < 2; i++){
-            this->value[i] = vals[i]; //set the values
+            this->addVal(vals[i]); //set the values
         }
     
-        for(int i=0; i<2; i++){
+        /*for(int i=0; i<2; i++){
             cout << "Node+1 value " << i << ": " << this->value[i] << endl; //printing for debugging yee yee
         }
+        */
+       //cout << "Node+1 values: ";
+       //this->printNode();
     }
 
     Node::Node(int val, int val2, int val3){
         int vals[3] = {val, val2, val3}; //put them in an array
-
+        this->clear();
         for(int i = 0; i < 3; i++){
-            this->value[i] = vals[i]; //set the values
+            this->addVal(vals[i]); //set the values
         }
-    
-        for(int i=0; i<3; i++){
-            cout << "Node+1 value " << i << ": " << this->value[i] << endl; //printing for debugging yee yee
-        }
+        //cout << "Node+2 values: ";
+        //this->printNode();
     }
     
+    void Node::printNode(){
+        for(int i = 0; i<6; i++){
+            if(this->getValue(i) == 0){
+                //do nothing
+            }
+            else{
+                cout << this->getValue(i) << "  ";
+            }
+        }
+        cout << endl;
+    }
+
+    void Node::clear(){
+        for(int j = 0; j<6; j++){ //set everything to 0 and nullptr for later comparisons
+            this->value[j] = 0;
+            this->child[j] = nullptr;
+        }
+    }
+
     void Node::setParent(Node * node){
         this->parent = node;
     }
     void Node::setChild(Node * node){
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 6; i++){
             if(this->child[i] == nullptr){
                 //set pointer
                 this->child[i] = node;
@@ -87,13 +109,17 @@ class Node{
     Node * Node::getChild(int childToGet){
         
         Node * child = this->child[childToGet];
-        if(child != 0){
+        if(child != nullptr){
             return child;
         }
         else{
-            cout << "Holy shit batman its broke! .__." << endl;
-            return new Node();
+            //cout << "getChild: Holy shit batman its broke! .__." << endl;
+            return nullptr;
         }
+    }
+
+    Node * Node::getParent(){
+        return this->parent;
     }
 
     int Node::getValue(int valToGet){
@@ -102,26 +128,35 @@ class Node{
             return val;
         }
         else{
-            cout << "Holy shit batman its broke! .__." << endl;
-            val = -1;
+            //cout << "getValue: Holy shit batman its broke! .__." << endl;
+            val = 0;
             return val;
         }
     }
 
     int Node::numChildren(){
-        int count =0;
-        for(int i=0; i<3; i++){
-            if(this->child[i]->getMaxVal() != NULL){
+        int count = 0;
+        for(int i=0; i<6; i++){
+            if(this->getChild(i) != nullptr){ //so if a child isnt a nullptr it is counted.
                 count++;
             }
         }
         return count;
     }
 
+    int Node::numValue(){
+        int count = 0;
+        for(int i=0; i<6; i++){
+            if(this->getValue(i) != 0){ //so if a child isnt a nullptr it is counted.
+                count++;
+            }
+        }
+        return count;
+    }
 
     int Node::getMaxVal(){ 
         int max = this->value[0];
-        for(int i = 1; i < this->numChildren(); i++){
+        for(int i = 1; i < 6; i++){
             if(this->value[i-1] < this->value[i]){
                 max = this->value[i];
             }
@@ -130,12 +165,12 @@ class Node{
                 
             }
         }
-        cout << "Max function returns " << max << endl;
+        //cout << "Max function returns " << max << endl;
         return max;
     }
 
     void Node::addVal(int val){
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 6; i++){
             if(this->value[i] == 0){ //go until you hit a 0.
                 this->value[i] = val;  
                 return;
@@ -149,23 +184,40 @@ class Node{
 
     void Node::absorb(Node * newChild){
          cout << "In absorb" << endl;
-         for(int i = 0; i < 3; i++){
-             cout << "in for loop" << endl;
-             cout << "the child value = " << this->child[i]->getValue(i);
-             if(this->child[i]->getValue(i) == 0){ //go until you hit a 0.
-                 //cout << "the child value = " << this->child[i]->getValue(i);
-                 this->child[i] = newChild;  
-                 
-             }
-                 //do nothing
+         Node * p = this->getParent();
+         
+         if(p == nullptr){
+             //do the megaroot stuff
+         }
+         if(p->numChildren() < 3){ //if parents children are less than 3
+            for(int i =0; i<6; i++){
+                Node * p_left = p->getChild(i); //take every child
+                for(int j=0; j<6; j++){
+                    if(p_left->getMaxVal() == newChild->getMaxVal() && p_left->numValue()>3){ //then when you find the "matching child" based on maxVal, and the next child over has 2 values
+                        p->getChild(j+1)->addVal(newChild->getMaxVal()); //add that max val to the next child over from you
+                        newChild->removeVal(newChild->getMaxVal()); //and then remove it from you
+                        
+                    }
+                }
+                
+            }
             
-             
-        }
+         }
+         if(newChild->numChildren() > 3){
+             Node * new_left = new Node(newChild->getValue(2), newChild->getValue(3)); //new node with last 2 values.
+             newChild->removeVal(newChild->getValue(2));
+             newChild->removeVal(newChild->getValue(3));                               //remove the values that were just added
+             p->setChild(new_left);
+             if(p->numChildren() > 3){
+                p->absorb(new_left);
+             }
+
+         }
     }
 
     void Node::discard(Node * removeChild){
         Node * blankNode = new Node();
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 6; i++){
             if(this->child[i]->getMaxVal() == removeChild->getMaxVal()){ //go until they have same max values
                 this->child[i] = blankNode; //blank it out.
             }
@@ -188,6 +240,32 @@ class Node{
         }
     }
 
+    Node * Node::search(int x){ //moved this to a function of node because it needs to be recursive
+        //base case
+        //cout << this->numChildren() << endl;
+
+        if(this->numChildren() == 0){//root has no children
+            //cout << "Will return node ";
+            //this->printNode();
+            return this;
+        } 
+
+        for(int i = 0; i < 3; i++){
+            int temp = this->getChild(i)->getMaxVal();
+            
+            if(temp == 0){
+                //do nothing
+            }
+            if(x < temp || x == temp){
+                //cout << "Max: " << temp << endl;
+                //this->getChild(i)->printNode();
+                return this->getChild(i)->search(x);
+            }    
+        }
+        Node * nil = new Node();
+        nil->addVal(2000);
+        return nil;
+    }
 
 
 
@@ -197,15 +275,14 @@ class Node{
 
 class Tree{
     Node * root;
-    void print(Node * start, int level);
-    int height(Node * node);
+    void print(Node * start);
 
     public:
     Tree();
     Tree(int * arr, int size);
     Node * search(int valToFind);
     bool insert(int valToAdd);
-    bool del(int valToKill); //delete is a keyword in C++ so maybe rename this in the prompt so people dont get confused when they get "Expected Unqualified-Id before 'delete' function" error message when trying to compile
+    bool del(int valToKill); //delete is a keyword in C++ so have to rename this 
     void print();
 
     void buildTree();
@@ -228,28 +305,12 @@ class Tree{
     }
 
 
-    int Tree::height(Node * node){
-        if(node->getMaxVal() == 0){
-            return 0;
-        }
-        else{
-            int max = 0;
-            int l[3] = {0, 0, 0};
-            
-            for(int i = 0; i < node->numChildren(); i++){ //will only go through # of children
-                l[i] = height(node->getChild(i));
-            }
-            for(int j=1; j < 3; j++){ //comparison to get max
-                if(l[j]>l[j-1]){
-                    max = l[j];
-                }
-            }
-            return (max+1);
-        }
-    }
 
 
     void Tree::buildTree(){
+
+        //Sorry for this bullshit I just want you to see how much I've worked on this.
+
         /*cout << "Inside buildTree" << endl;
         int sizeround = ceil(size/3);
         int itemstravelled = 0;
@@ -299,8 +360,32 @@ class Tree{
 
             }
         }    */
+            //Now we get to do this all over again, but instead of the leaves, use the level we just made, and the size of the level which is always round(size/3) :)
+        /*if(sizeround > 1){
+            cout << "Recursing" << endl;
+            buildTree(p1, sizeround);
+        }
+        else{
+            //you are done. set the root node and be done with it.
+            cout << "At root node" << endl;
+            this->root = &p1[0];
+        }
+        */
 
-            //WELL WELL WELL, YOU GOT ME. I *guess* ill build the stupid thing manually. THanks to Nick Stitely for the help with this part because apparently I have cognitive issues or something.
+
+
+
+
+
+
+
+
+            //WELL WELL WELL, YOU GOT ME. I *guess* ill build the stupid thing manually. Thanks to Nick Stitely for the help with this part because apparently I have cognitive issues or something.
+            /*
+            Okay coming back to this after fixing everything to be able to build the tree I realize how stupid it was of me to try and build the thing from the leaves up to the top and not just
+            use what is below because in order to do what I tried to, you already have to have everything else and it kind of defeats the purpose of building the tree first and developing the other
+            algorithms around it. End rant 
+            */
             Node * K = new Node(17,28,39);
             Node * A = new Node(3,8,17);
             Node * B = new Node(21,28);
@@ -327,39 +412,16 @@ class Tree{
             this->root = K;
         
 
-        //Now we get to do this all over again, but instead of the leaves, use the level we just made, and the size of the level which is always round(size/3) :)
-        /*if(sizeround > 1){
-            cout << "Recursing" << endl;
-            buildTree(p1, sizeround);
-        }
-        else{
-            //you are done. set the root node and be done with it.
-            cout << "At root node" << endl;
-            this->root = &p1[0];
-        }
-        */
+        
     }
 
 
     Node * Tree::search(int valToFind){
-        //let root be root of T
-        //Base case for leaf
-        if(this->root->numChildren() == 0){//root has no children
-            return this->root;
-        } 
-        if(valToFind <= this->root->getChild(0)->getMaxVal()){
-            //root.leftchild.Search(valToFind);
+        Node * node = this->root->search(valToFind);
+        if(node->getMaxVal() == 2000){
+            cout << "Search element too large." << endl;
         }
-        if(valToFind <= this->root->getChild(1)->getMaxVal()){
-            //root.midchild.Search(valToFind);
-        }
-        if(valToFind <= this->root->getChild(2)->getMaxVal()){
-            //root.rightchild.Search(valToFind);
-        }
-        else{
-            //return largest element of arrray
-        }
-        return root; //dont really do this.
+        return node;
     }
 
     bool Tree::insert(int valToAdd){
@@ -367,11 +429,11 @@ class Tree{
         for(int i=0; i<6; i++){
             if(0 != b->getValue(i)){
                 if(b->getValue(i)==valToAdd){
-                    return 0;
+                    return 0; //value already exists.
                 }   
             }
-        }
-        
+        } 
+        b->addVal(valToAdd); //add the value to the node
         b->absorb(b); //is function of node.
         return 1;
     }
@@ -388,34 +450,21 @@ class Tree{
         return 0;
     }
 
-    void Tree::print(Node * start, int level){ //using breadth first traversal. well, trying.
-        if(root->getMaxVal() == 0){
+    void Tree::print(Node * start){ //using depth first traversal
+        if(start==nullptr){
+            //cout << "Nullptr encountered in print" << endl; 
             return;
         }
-        if(level == 1){
-
-            for(int i=0; i<start->numChildren(); i++){
-                if((start->getValue(i)) != 0){
-                    cout << start->getValue(i);
-                }
-            }
-            cout << endl;
-        }
-        else{
-            for(int j=0; j< start->numChildren(); j++){
-                print(start->getChild(j), (level-1));
-            }
-            
-        }
+        start->printNode();
+        cout << endl;
+        this->print(start->getChild(0));
+        this->print(start->getChild(1));
+        this->print(start->getChild(2));
         
     }
 
     void Tree::print(){
-        int h = height(this->root);
-        for(int i=0; i<h; i++){
-            print(this->root, i);
-        }
-        
+        print(this->root);
     }
 
 
@@ -429,6 +478,17 @@ int main(){
     //and now we pass it to the helper function I made because why do this all in main???? thats dumb.
     Tree * tr = new Tree(seq, size);
     cout << "Made tree" << endl;
+    tr->print();
+
+    cout << "Testing absorb on value 18" << endl;
+
+    bool in = tr->insert(18);
+    if(in){
+        tr->print();
+    }
+    else{
+        cout << "Value already exists" << endl;
+    }
     tr->print();
 
 }
