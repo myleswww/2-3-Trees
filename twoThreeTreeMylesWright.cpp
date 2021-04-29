@@ -17,6 +17,8 @@ Guides Used: https://www.cprogramming.com/tutorial/computersciencetheory/twothre
 using namespace std;
 
 
+
+
 class Node{
     Node * parent;
     int value[6];
@@ -44,6 +46,10 @@ class Node{
     void removeVal(int val);
     void printNode();
     Node * search(int x);
+    void copy(Node * copyTo); //copies this node to a new node.
+    void sortValues(); //insertion sort to reorder elements
+    void sortChildren();
+    void update(); //updates the tree recursively
 };
     Node::Node(){
         this->clear();
@@ -73,6 +79,12 @@ class Node{
         //this->printNode();
     }
     
+    void Node::copy(Node * copyTo){
+        for(int i = 0; i < 6; i++){ //copy the values and the children
+            copyTo->addVal(this->getValue(i));
+        }
+    }
+
     void Node::printNode(){
         for(int i = 0; i<6; i++){
             if(this->getValue(i) == 0){
@@ -89,6 +101,34 @@ class Node{
         for(int j = 0; j<6; j++){ //set everything to 0 and nullptr for later comparisons
             this->value[j] = 0;
             this->child[j] = nullptr;
+        }
+    }
+
+    void Node::sortChildren(){
+        Node * k = new Node(); //temps for children
+        int j;
+        for(int i = 0; i < 3; i++){
+            k = this->getChild(i);
+            j = i;
+            while(j<0 && this->getChild(j-1) > k){
+                this->child[j] = this->getChild(j-1);
+                j--;
+            }
+            this->child[j] = k;
+        }
+    }
+
+    void Node::sortValues(){
+        int k;
+        int j;
+        for(int i = 0; i < 3; i++){ //setting to 3 because this will never be called on an overfilled Node
+            k = this->getValue(i);
+            j = i;
+            while(j<0 && this->getValue(j-1) > k){
+                this->value[j] = this->getValue(j-1);
+                j--;
+            }
+            this->value[j] = k;
         }
     }
 
@@ -181,16 +221,35 @@ class Node{
         }
     }
 
+    void Node::update(){
+        Node * p = new Node();
+        
+        if(this->getParent() != nullptr){
+            p->setChild(this);
+            for(int i=0; i<3; i++){
+                if(p->getChild(i) != nullptr && p->getChild(i)==this && p->getValue(i) != this->getMaxVal()){
+                    p->value[i] = this->getMaxVal();
+                }
+            }
+        }
+        if(p != nullptr){
+            p->update();
+        }
+    }
 
     void Node::absorb(Node * newChild){
          cout << "In absorb" << endl;
          Node * p = this->getParent();
          
-         if(p == nullptr){
+         if(p == nullptr){ //this is if this is the root
              //do the megaroot stuff
+             Node * megasus = new Node();  //this is literally from the notes
+             megasus->setChild(this);
+             megasus->setChild(newChild);
+             megasus->sortChildren();
          }
          if(p->numChildren() < 3){ //if parents children are less than 3
-            for(int i =0; i<6; i++){
+            /*for(int i =0; i<6; i++){
                 Node * p_left = p->getChild(i); //take every child
                 for(int j=0; j<6; j++){
                     if(p_left->getMaxVal() == newChild->getMaxVal() && p_left->numValue()>3){ //then when you find the "matching child" based on maxVal, and the next child over has 2 values
@@ -201,31 +260,36 @@ class Node{
                 }
                 
             }
-            
+            */
+           newChild->sortValues();
+           p->setChild(newChild); //set the new child
+           //p->discard(this);
+           p->sortChildren(); //sort the children
+           return;
          }
          if(newChild->numChildren() > 3){
-             Node * new_left = new Node(newChild->getValue(2), newChild->getValue(3)); //new node with last 2 values.
+             Node * p_left = new Node(newChild->getValue(2), newChild->getValue(3)); //new node with last 2 values.
              newChild->removeVal(newChild->getValue(2));
              newChild->removeVal(newChild->getValue(3));                               //remove the values that were just added
-             p->setChild(new_left);
+             p->setChild(p_left);
              if(p->numChildren() > 3){
-                p->absorb(new_left);
+                p->absorb(p_left);
              }
 
          }
+         p->update();
     }
 
     void Node::discard(Node * removeChild){
-        Node * blankNode = new Node();
-        for(int i = 0; i < 6; i++){
-            if(this->child[i]->getMaxVal() == removeChild->getMaxVal()){ //go until they have same max values
-                this->child[i] = blankNode; //blank it out.
-            }
-            else{
-                //do nothing
-            }
+        Node * p = removeChild->getParent();
+        if(p->numChildren()==2){
+            return p;
         }
-        removeVal(removeChild->getMaxVal()); //remove the max value of the child that is stored in this node
+        int totChildren = p->getParent()->numChildren();
+
+        if(totChildren >= 4){
+
+        }
     }
 
     void Node::removeVal(int val){
@@ -271,8 +335,6 @@ class Node{
 
 
 
-
-
 class Tree{
     Node * root;
     void print(Node * start);
@@ -287,6 +349,8 @@ class Tree{
 
     void buildTree();
 };
+
+
 
     Tree::Tree(int * arr, int size){
         //First, make each value into a node. These are the leaves. They have no children. :)
@@ -427,14 +491,17 @@ class Tree{
     bool Tree::insert(int valToAdd){
         Node * b = this->search(valToAdd);
         for(int i=0; i<6; i++){
-            if(0 != b->getValue(i)){
+            if(b->getValue(i) != 0){
                 if(b->getValue(i)==valToAdd){
                     return 0; //value already exists.
                 }   
             }
         } 
-        b->addVal(valToAdd); //add the value to the node
-        b->absorb(b); //is function of node.
+        Node * a = new Node(); //blank node;
+        b->copy(a);
+        a->addVal(valToAdd); //add the value to the node
+        a->sortValues();
+        b->absorb(a); 
         return 1;
     }
 
