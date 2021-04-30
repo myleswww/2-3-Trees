@@ -44,12 +44,15 @@ class Node{
     void setChild(Node * node);
     void addVal(int val);
     void removeVal(int val);
+    void removeChild(Node * node);
     void printNode();
     Node * search(int x);
     void copy(Node * copyTo); //copies this node to a new node.
     void sortValues(); //insertion sort to reorder elements
     void sortChildren();
     void update(); //updates the tree recursively
+    void giveSiblingR(); //give the rightmost node to your sibling
+    Node * getRightSibling(); //get the right sibling
 };
     Node::Node(){
         this->clear();
@@ -106,31 +109,39 @@ class Node{
 
     void Node::sortChildren(){
         Node * k = new Node(); //temps for children
-        int j;
-        for(int i = 0; i < 3; i++){
-            k = this->getChild(i);
-            j = i;
-            while(j<0 && this->getChild(j-1) > k){
-                this->child[j] = this->getChild(j-1);
-                j--;
+        Node * j = new Node();
+         
+        for(int i = 0; i < 2; i++){ //setting to 3 because this will never be called on an overfilled Node
+            for(int h = i; h < 3; h++){
+                k=this->getChild(i);
+                j=this->getChild(h);
+                if(k->getMaxVal() > j->getMaxVal() && j != nullptr){
+                    this->child[i] = j;
+                    this->child[h] = k;
+                }
             }
-            this->child[j] = k;
-        }
+            }
     }
 
     void Node::sortValues(){
         int k;
         int j;
-        for(int i = 0; i < 3; i++){ //setting to 3 because this will never be called on an overfilled Node
-            k = this->getValue(i);
-            j = i;
-            while(j<0 && this->getValue(j-1) > k){
-                this->value[j] = this->getValue(j-1);
-                j--;
+        for(int i = 0; i < 5; i++){ //setting to 3 because this will never be called on an overfilled Node
+            for(int h = i; h < 6; h++){
+                k=this->getValue(i);
+                j=this->getValue(h);
+                if(k == 0){
+                    this->value[i] = this->value[i+1]; //if value[i] ==0, switch the values.
+                    this->value[i+1] = 0;
+                }
+                if(k > j && k != 0 && j!=0){ //if j = 0, it wont run. this keeps the zeroes in the back like {11,14,17,13,0,0} and still allows for sorting to {11,13,14,17,0,0}
+                    this->value[i] = j;
+                    this->value[h] = k;
+                }
             }
-            this->value[j] = k;
-        }
+            }
     }
+    
 
     void Node::setParent(Node * node){
         this->parent = node;
@@ -237,6 +248,47 @@ class Node{
         }
     }
 
+    void Node::removeChild(Node * node){
+        for(int i = 0; i < 6; i++){
+            if(this->getChild(i)->getMaxVal() == node->getMaxVal()){
+                this->removeVal(i); //set to 0
+                this->child[i] = nullptr;
+            }
+        }
+    }
+    void Node::giveSiblingR(){
+        Node * p = this->getParent();
+        Node * sibling = p->getParent()->getRightSibling();
+        if(sibling == nullptr){ //either root or no right sibling, need to go up. call absorb.
+
+        }
+        else{
+            p->removeChild(this);
+            sibling->setChild(this);
+        }
+        //update
+        
+        if(p->numChildren()>3){ //if parent has 4 children after insert
+            sibling->giveSiblingR(); //call give sibling r on right sibling.
+        }
+    }
+
+    Node * Node::getRightSibling(){
+        Node * p = this->getParent();
+        if(p==nullptr){
+            return nullptr;  //no parent, is root
+        }
+        for(int i = 0; i < 6; i++){
+            if(p->getChild(i) == this){
+                return p->child[i+1];
+            }
+            else if(p->getChild(i)==nullptr){ //does not have a right sibling
+                return nullptr;
+            }
+        }
+        return nullptr;
+    }
+
     void Node::absorb(Node * newChild){
          cout << "In absorb" << endl;
          Node * p = this->getParent();
@@ -261,29 +313,31 @@ class Node{
                 
             }
             */
-           newChild->sortValues();
-           p->setChild(newChild); //set the new child
-           //p->discard(this);
-           p->sortChildren(); //sort the children
+           this->addVal(newChild->getValue(0));
+           this->sortValues();
            return;
          }
-         if(newChild->numChildren() > 3){
-             Node * p_left = new Node(newChild->getValue(2), newChild->getValue(3)); //new node with last 2 values.
-             newChild->removeVal(newChild->getValue(2));
-             newChild->removeVal(newChild->getValue(3));                               //remove the values that were just added
-             p->setChild(p_left);
-             if(p->numChildren() > 3){
-                p->absorb(p_left);
-             }
+         if(newChild->numChildren() >= 3){
+             this->addVal(newChild->getValue(0)); //add the value
+             this->sortValues(); //sort them
+             Node * p_left = new Node(this->getValue(0), this->getValue(1)); //create p_left with left half of this
+             this->value[0] = this->value[2]; //move over the right half of this to the left half
+             this->value[1] = this->value[3];
+             this->removeVal(2);            //remove the right half as it would be duplicates of  the left half of this point
+             this->removeVal(3);
+             p->setChild(p_left);           //set p_left as a child of p
+             p->sortChildren();             //sort p's children so they are in correct order.
+             //give right child of p to right sibling
+             p->giveSiblingR();
 
          }
-         p->update();
+         //p->update();
     }
 
     void Node::discard(Node * removeChild){
         Node * p = removeChild->getParent();
         if(p->numChildren()==2){
-            return p;
+            return;
         }
         int totChildren = p->getParent()->numChildren();
 
@@ -340,7 +394,7 @@ class Tree{
     void print(Node * start);
 
     public:
-    Tree();
+    Tree(Node * r);
     Tree(int * arr, int size);
     Node * search(int valToFind);
     bool insert(int valToAdd);
@@ -369,7 +423,9 @@ class Tree{
     }
 
 
-
+    Tree::Tree(Node * r){
+        this->root = r;
+    }
 
     void Tree::buildTree(){
 
@@ -491,17 +547,15 @@ class Tree{
     bool Tree::insert(int valToAdd){
         Node * b = this->search(valToAdd);
         for(int i=0; i<6; i++){
-            if(b->getValue(i) != 0){
-                if(b->getValue(i)==valToAdd){
+            if(b->getValue(i) != 0){ //only run on existing values
+                if(b->getValue(i)==valToAdd){ //if bi = value we are trying to add
                     return 0; //value already exists.
                 }   
             }
         } 
         Node * a = new Node(); //blank node;
-        b->copy(a);
-        a->addVal(valToAdd); //add the value to the node
-        a->sortValues();
-        b->absorb(a); 
+        a->addVal(valToAdd); //add the value to the node. for example if we are trying to add 6 to {5,8}, a will look like {6,0,0}, and b will look like {5,8,0}. Zeros here are placeholders.
+        b->absorb(a); //so this would look like {6}->absorb({5,8}) for the most simple case.
         return 1;
     }
 
@@ -547,15 +601,24 @@ int main(){
     cout << "Made tree" << endl;
     tr->print();
 
-    cout << "Testing absorb on value 18" << endl;
+    cout << endl << endl << "Testing absorb on value 13" << endl;
 
-    bool in = tr->insert(18);
+    bool in = tr->insert(13);
     if(in){
         tr->print();
     }
     else{
         cout << "Value already exists" << endl;
     }
-    tr->print();
-
+    
+   /* 
+   cout << "Testing sorting values on {11,0,17,13}" << endl;
+   Node * n = new Node(11,0,17);
+   n->addVal(13);
+   n->printNode();
+   cout << endl;
+   n->sortValues();
+   n->printNode();
+   */
+   
 }
