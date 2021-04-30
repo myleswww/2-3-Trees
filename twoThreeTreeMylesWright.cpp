@@ -24,9 +24,11 @@ class Node{
     int value[6];
     Node * child[6];
     void clear();
+    void setParent(Node * node);
 
     public:
     Node();
+    Node(int val);
     Node(int val, int val2);
     Node(int val, int val2, int val3); //constructors
 
@@ -40,7 +42,7 @@ class Node{
     Node * getChild(int childToGet);
     Node * getParent();
     int getValue(int valToGet);
-    void setParent(Node * node);
+    
     void setChild(Node * node);
     void addVal(int val);
     void removeVal(int val);
@@ -50,13 +52,18 @@ class Node{
     void copy(Node * copyTo); //copies this node to a new node.
     void sortValues(); //insertion sort to reorder elements
     void sortChildren();
-    void update(); //updates the tree recursively
+    
     void giveSiblingR(); //give the rightmost node to your sibling
     Node * getRightSibling(); //get the right sibling
 };
     Node::Node(){
         this->clear();
     }
+    Node::Node(int val){
+        this->clear();
+        this->addVal(val);
+    }
+
     Node::Node(int val, int val2){
         this->clear(); //initialize values
         int vals[2] = {val, val2}; //put them in an array
@@ -110,89 +117,125 @@ class Node{
     void Node::sortChildren(){
         Node * k = new Node(); //temps for children
         Node * j = new Node();
-         
-        for(int i = 0; i < 2; i++){ //setting to 3 because this will never be called on an overfilled Node
-            for(int h = i; h < 3; h++){
-                k=this->getChild(i);
-                j=this->getChild(h);
-                if(k->getMaxVal() > j->getMaxVal() && j != nullptr){
-                    this->child[i] = j;
-                    this->child[h] = k;
+        if(this!=nullptr){
+            for(int i = 0; i < (this->numChildren()-1); i++){ 
+                for(int h = i; h < this->numChildren(); h++){
+                    k=this->getChild(i);
+                    j=this->getChild(h);
+                    if(k->getMaxVal() > j->getMaxVal() && j != nullptr && k != nullptr){
+                        this->child[i] = j;
+                        this->value[i] = j->getMaxVal();
+                        this->child[h] = k;
+                        this->value[h] = k->getMaxVal();
+                    }
                 }
             }
-            }
+        } 
+        
     }
 
     void Node::sortValues(){
         int k;
         int j;
-        for(int i = 0; i < 5; i++){ //setting to 3 because this will never be called on an overfilled Node
-            for(int h = i; h < 6; h++){
-                k=this->getValue(i);
-                j=this->getValue(h);
-                if(k == 0){
-                    this->value[i] = this->value[i+1]; //if value[i] ==0, switch the values.
-                    this->value[i+1] = 0;
-                }
-                if(k > j && k != 0 && j!=0){ //if j = 0, it wont run. this keeps the zeroes in the back like {11,14,17,13,0,0} and still allows for sorting to {11,13,14,17,0,0}
-                    this->value[i] = j;
-                    this->value[h] = k;
+        if(this != nullptr){
+            for(int i = 0; i < 5; i++){ 
+                for(int h = i; h < 6; h++){
+                    k=this->getValue(i);
+                    j=this->getValue(h);
+                    if(k == 0){
+                        this->value[i] = this->value[i+1]; //if value[i] ==0, switch the values.
+                        this->value[i+1] = 0;
+                    }
+                    if(k > j && k != 0 && j!=0){ //if j = 0, it wont run. this keeps the zeroes in the back like {11,14,17,13,0,0} and still allows for sorting to {11,13,14,17,0,0}
+                        this->value[i] = j;
+                        this->value[h] = k;
+                    }
                 }
             }
-            }
+        }
     }
     
 
     void Node::setParent(Node * node){
-        this->parent = node;
+        if(this != nullptr){
+            this->parent = node;
+        }
+        
     }
     void Node::setChild(Node * node){
-        for(int i = 0; i < 6; i++){
-            if(this->child[i] == nullptr){
-                //set pointer
-                this->child[i] = node;
-                node->setParent(this); //set the parent
-                return;
+        if(this!=nullptr){
+            for(int i = 0; i < 6; i++){
+                if(this->child[i] == nullptr){
+                    //set pointer
+                    this->child[i] = node;
+                    node->setParent(this); //set the parent
+                    return;
+                }
             }
         }
+        
+        
     }
 
     Node * Node::getChild(int childToGet){
-        
-        Node * child = this->child[childToGet];
-        if(child != nullptr){
-            return child;
+        if(this != nullptr){
+            Node * child = this->child[childToGet];
+            if(child != nullptr){
+                return child;
+            }
+            else{
+                //cout << "getChild: Holy shit batman its broke! .__." << endl;
+                return nullptr;
+            }
         }
         else{
-            //cout << "getChild: Holy shit batman its broke! .__." << endl;
+            return nullptr;
+        }
+        
+    }
+
+    Node * Node::getParent(){
+        if(this != nullptr){
+            if(this->parent != nullptr){
+                return this->parent;
+            }
+            
+        }
+        else{
             return nullptr;
         }
     }
 
-    Node * Node::getParent(){
-        return this->parent;
-    }
-
     int Node::getValue(int valToGet){
-        int val = this->value[valToGet];
-        if(val != 0){
-            return val;
+        if(this!=nullptr){
+            int val = this->value[valToGet];
+            if(val != 0){
+                return val;
+            }
+            else{
+                //cout << "getValue: Holy shit batman its broke! .__." << endl;
+                val = 0;
+                return val;
+            }
         }
-        else{
-            //cout << "getValue: Holy shit batman its broke! .__." << endl;
-            val = 0;
-            return val;
-        }
+        return 0;
     }
 
     int Node::numChildren(){
-        int count = 0;
-        for(int i=0; i<6; i++){
-            if(this->getChild(i) != nullptr){ //so if a child isnt a nullptr it is counted.
-                count++;
-            }
+        if(this==nullptr){
+            //cout << "You're looking for something that doesn't exist, buddy." << endl;
+            return 0;
         }
-        return count;
+        else{
+            int count = 0;
+            for(int i=0; i<6; i++){
+                if(this->getChild(i) != nullptr){ //so if a child isnt a nullptr it is counted.
+                    count++;
+                }
+        }
+            return count;
+        }
+        
     }
 
     int Node::numValue(){
@@ -206,45 +249,37 @@ class Node{
     }
 
     int Node::getMaxVal(){ 
-        int max = this->value[0];
-        for(int i = 1; i < 6; i++){
-            if(this->value[i-1] < this->value[i]){
-                max = this->value[i];
-            }
-            else{
-                //do nothing
+        if(this!=nullptr){
+            int max = 0;
+            for(int i = 1; i < 6; i++){
+                if(this->value[i-1] < this->value[i]){
+                    max = this->value[i];
+                }
+                else{
+                    //do nothing
                 
+                }
             }
+            //cout << "Max function returns " << max << endl;
+            return max;
         }
-        //cout << "Max function returns " << max << endl;
-        return max;
+        else{
+            return 0;
+        }
+        
     }
 
     void Node::addVal(int val){
-        for(int i = 0; i < 6; i++){
-            if(this->value[i] == 0){ //go until you hit a 0.
-                this->value[i] = val;  
-                return;
-            }
-            else{
-                //do nothing
-            }
-        }
-    }
-
-    void Node::update(){
-        Node * p = new Node();
-        
-        if(this->getParent() != nullptr){
-            p->setChild(this);
-            for(int i=0; i<3; i++){
-                if(p->getChild(i) != nullptr && p->getChild(i)==this && p->getValue(i) != this->getMaxVal()){
-                    p->value[i] = this->getMaxVal();
+        if(this != nullptr){
+            for(int i = 0; i < 6; i++){
+                if(this->value[i] == 0){ //go until you hit a 0.
+                    this->value[i] = val;  
+                    return;
+                }
+                else{
+                    //do nothing
                 }
             }
-        }
-        if(p != nullptr){
-            p->update();
         }
     }
 
@@ -267,10 +302,12 @@ class Node{
             sibling->setChild(this);
         }
         //update
-        
-        if(p->numChildren()>3){ //if parent has 4 children after insert
-            sibling->giveSiblingR(); //call give sibling r on right sibling.
+        if(p != nullptr){
+            if(p->numChildren()>3){ //if parent has 4 children after insert
+                sibling->giveSiblingR(); //call give sibling r on right sibling.
+            }
         }
+            
     }
 
     Node * Node::getRightSibling(){
@@ -292,15 +329,17 @@ class Node{
     void Node::absorb(Node * newChild){
          cout << "In absorb" << endl;
          Node * p = this->getParent();
-         
+         //this->printNode();
+         //cout << this->numValue() << endl << this->numChildren() << endl;
          if(p == nullptr){ //this is if this is the root
              //do the megaroot stuff
+             cout << "in megaroot" << endl;
              Node * megasus = new Node();  //this is literally from the notes
              megasus->setChild(this);
              megasus->setChild(newChild);
              megasus->sortChildren();
          }
-         if(p->numChildren() < 3){ //if parents children are less than 3
+         else if(this->numValue() < 3){ //if this has 2 values, can just add child and value.
             /*for(int i =0; i<6; i++){
                 Node * p_left = p->getChild(i); //take every child
                 for(int j=0; j<6; j++){
@@ -313,25 +352,64 @@ class Node{
                 
             }
             */
+           cout << "in < 3" << endl;
            this->addVal(newChild->getValue(0));
-           this->sortValues();
-           return;
+           this->sortChildren();
+           if(this!=nullptr){
+               if(this->numChildren() != 0){ //is not leaf node
+                    this->setChild(newChild); //set the child to update the tree
+               }
+               return;
+           }
+           
          }
-         if(newChild->numChildren() >= 3){
+         else if(this->numValue() >= 3){ //is full
+            cout << "in numchild >3" << endl;
              this->addVal(newChild->getValue(0)); //add the value
-             this->sortValues(); //sort them
-             Node * p_left = new Node(this->getValue(0), this->getValue(1)); //create p_left with left half of this
-             this->value[0] = this->value[2]; //move over the right half of this to the left half
-             this->value[1] = this->value[3];
-             this->removeVal(2);            //remove the right half as it would be duplicates of  the left half of this point
-             this->removeVal(3);
-             p->setChild(p_left);           //set p_left as a child of p
-             p->sortChildren();             //sort p's children so they are in correct order.
-             //give right child of p to right sibling
-             p->giveSiblingR();
+             this->child[3] = newChild;
+             this->sortChildren();//sort them
+             this->printNode();
+             Node * L = new Node(this->getValue(0), this->getValue(1)); //create p_left with left half of this
+             Node * R = new Node(this->getValue(2), this->getValue(3));
+             L->setChild(this->getChild(0));
+             L->setChild(this->getChild(1));
+             R->setChild(this->getChild(2));
+             R->setChild(this->getChild(3));
+             this->clear();
+             
+             p->setChild(L);
+             cout << "L : ";
+             L->printNode();
+             cout << "R : ";
+             p->setChild(R);
+             R->printNode();
+             L->getParent()->printNode();
+             //this->printNode();
+
+             
+             if(p->getParent()->numChildren() < 3 && (p->getParent()->numChildren() != 0 || p->getParent() != nullptr)){ //p only has one sibling, and is not root
+                 p->sortChildren();             //sort p's children so they are in correct order.
+                 cout << " Only two siblings";
+             }
+             else{ //is root or has 2 siblings, either way move up the tree
+                 Node * z = new Node(R->getMaxVal()); //make a new parent of p_left, dont make p_left a child of p
+                 z->setChild(R);
+                 cout << "Z: ";
+                 z->printNode();
+                 cout << "z child: ";
+                 z->getChild(0)->printNode();
+                 cout << "p: ";
+                 p->printNode();
+                 cout << "p child :";
+                 
+                 p->absorb(z); //call absorb on p_left
+                 
+             }
+             
+             
 
          }
-         //p->update();
+         
     }
 
     void Node::discard(Node * removeChild){
@@ -400,7 +478,7 @@ class Tree{
     bool insert(int valToAdd);
     bool del(int valToKill); //delete is a keyword in C++ so have to rename this 
     void print();
-
+    void update(); //updates the tree recursively
     void buildTree();
 };
 
@@ -544,6 +622,13 @@ class Tree{
         return node;
     }
 
+    void Tree::update(){
+        if(this->root->getParent()!=nullptr){
+            this->root = this->root->getParent();
+            this->update();
+        }
+    }
+
     bool Tree::insert(int valToAdd){
         Node * b = this->search(valToAdd);
         for(int i=0; i<6; i++){
@@ -556,6 +641,7 @@ class Tree{
         Node * a = new Node(); //blank node;
         a->addVal(valToAdd); //add the value to the node. for example if we are trying to add 6 to {5,8}, a will look like {6,0,0}, and b will look like {5,8,0}. Zeros here are placeholders.
         b->absorb(a); //so this would look like {6}->absorb({5,8}) for the most simple case.
+        this->update();
         return 1;
     }
 
@@ -612,13 +698,21 @@ int main(){
     }
     
    /* 
-   cout << "Testing sorting values on {11,0,17,13}" << endl;
-   Node * n = new Node(11,0,17);
-   n->addVal(13);
-   n->printNode();
-   cout << endl;
-   n->sortValues();
-   n->printNode();
-   */
+
+   cout << "Testing sorting values on {11,6,17}" << endl;
+    
+   Node * a = new Node(9,10,11);
+   Node * b = new Node(4,5,6);
+   Node * c = new Node(7,15,17);
+   Node * n = new Node(11,6,17);
+   Tree * t = new Tree(n);
+   n->setChild(a);
+   n->setChild(b);
+   n->setChild(c);
+   t->print();
+   cout << endl << "Sorting" << endl;
+   n->sortChildren();
+   t->print();
    
+   */
 }
